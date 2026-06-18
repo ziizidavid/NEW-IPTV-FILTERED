@@ -1,10 +1,14 @@
 import re
 import urllib.request
+import urllib.error
+import json
 from pathlib import Path
 import hashlib
 
 SOURCE = "https://raw.githubusercontent.com/doms9/iptv/refs/heads/default/M3U8/events.m3u8"
 HASH_FILE = ".last_events_hash"
+STATUS_FILE = "channel_status.json"
+MAX_FAILURES = 4
 
 CHANNEL_FILE = "channel"
 
@@ -60,6 +64,18 @@ if current_hash == old_hash:
 hash_path.write_text(current_hash)
 
 lines = raw.splitlines()
+def is_alive(url):
+    try:
+        req = urllib.request.Request(
+            url,
+            headers={"User-Agent": "Mozilla/5.0"}
+        )
+
+        with urllib.request.urlopen(req, timeout=15) as r:
+            return r.status in (200, 206)
+
+    except Exception:
+        return False
 
 blocks = []
 i = 0
