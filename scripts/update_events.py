@@ -60,7 +60,7 @@ while i < len(lines):
 
         text = " ".join(block).lower()
 
-        if any(k in text for k in KEYWORDS):
+        if not any(k in text for k in BLOCKED):
             blocks.append("\n".join(block))
     else:
         i += 1
