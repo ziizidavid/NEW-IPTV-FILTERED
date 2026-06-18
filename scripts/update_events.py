@@ -1,8 +1,10 @@
 import re
 import urllib.request
 from pathlib import Path
+import hashlib
 
 SOURCE = "https://raw.githubusercontent.com/doms9/iptv/refs/heads/default/M3U8/events.m3u8"
+HASH_FILE = ".last_events_hash"
 
 CHANNEL_FILE = "channel"
 
@@ -43,6 +45,19 @@ BLOCKED = [
 ]
 
 raw = urllib.request.urlopen(SOURCE, timeout=30).read().decode("utf-8", "ignore")
+current_hash = hashlib.sha256(raw.encode()).hexdigest()
+
+hash_path = Path(HASH_FILE)
+
+old_hash = ""
+if hash_path.exists():
+    old_hash = hash_path.read_text().strip()
+
+if current_hash == old_hash:
+    print("No changes in doms9 source")
+    raise SystemExit(0)
+
+hash_path.write_text(current_hash)
 
 lines = raw.splitlines()
 
