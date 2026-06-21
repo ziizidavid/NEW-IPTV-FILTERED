@@ -1,4 +1,3 @@
-
 name: IPTV Event Updater
 
 on:
@@ -10,28 +9,37 @@ on:
 permissions:
   contents: write
 
+concurrency:
+  group: iptv-update
+  cancel-in-progress: true
+
 jobs:
   update-events:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      - uses: actions/setup-python@v5
+      - name: Setup Python
+        uses: actions/setup-python@v5
         with:
           python-version: "3.12"
 
       - name: Run updater
-        run: python scripts/update_events.py
+        run: |
+          python scripts/update_events.py
 
       - name: Commit changes
         run: |
-          git config user.name github-actions[bot]
-          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-          git add channel .last_events_hash
+          git add channel
 
-          git diff --cached --quiet || (
+          if git diff --cached --quiet; then
+            echo "No changes"
+          else
             git commit -m "Auto update soccer events"
             git push
-          )
+          fi
